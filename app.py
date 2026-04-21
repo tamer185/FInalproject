@@ -9,13 +9,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 
 # Allow requests from your Vercel frontend
-CORS(app, resources={r"/api/*": {"origins": [
-    "https://fypme.vercel.app",
-    "http://localhost:5500",
-    "http://127.0.0.1:5500",
-    "http://localhost:5000",
-    "http://127.0.0.1:5000"
-]}})
+CORS(app, origins="*")
 
 DB_PATH = os.environ.get('DB_PATH', 'sports.db')
 
