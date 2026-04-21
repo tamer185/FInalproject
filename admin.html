@@ -282,6 +282,7 @@
 // ================================================================
 const ADMIN_EMAIL    = 'tamernasr1717@gmail.com';
 const ADMIN_PASSWORD = 'TAML76';
+const BACKEND_URL    = 'https://sports-hub-api-hiao.onrender.com';
 
 // ================================================================
 // OTP STATE
@@ -289,7 +290,6 @@ const ADMIN_PASSWORD = 'TAML76';
 let currentOtp      = null;
 let otpExpiry       = null;
 let otpTimerHandle  = null;
-const BACKEND_URL   = 'https://sports-hub-api-hiao.onrender.com';
 let adminLoggedIn   = false;
 
 // ================================================================
@@ -492,7 +492,6 @@ function updateStats() {
 // PENDING REGISTRATIONS
 // ================================================================
 function showPendingRegistrations() {
-    pendingRegistrations = JSON.parse(localStorage.getItem('pendingRegistrations')) || [];
     const tbody = document.getElementById('pendingTableBody');
     tbody.innerHTML = '';
 
@@ -503,15 +502,18 @@ function showPendingRegistrations() {
     }
 
     pendingRegistrations.forEach(reg=>{
-        const event = eventsData.find(e=>e.id===reg.eventId);
-        if(!event) return;
+        const event = eventsData.find(e=>String(e.id)===String(reg.eventId));
+        const eventTitle    = event ? event.title    : (reg.eventTitle || 'Event #'+reg.eventId);
+        const eventLocation = event ? event.location : '—';
+        const eventDate     = event ? event.date     : '—';
+        const eventPrice    = event ? (event.price===0?'<span style="color:var(--approved);font-weight:700;">FREE</span>':'<strong>$'+event.price+'</strong>') : '—';
         const row = document.createElement('tr');
         row.innerHTML=`
             <td><div class="user-info"><div class="user-name">${reg.userName||'Unknown'}</div><div class="user-email">${reg.userEmail||'No email'}</div></div></td>
-            <td><strong>${event.title}</strong></td>
-            <td>${event.location}</td>
-            <td>${event.date}</td>
-            <td>${event.price===0?'<span style="color:var(--approved);font-weight:700;">FREE</span>':'<strong>$'+event.price+'</strong>'}</td>
+            <td><strong>${eventTitle}</strong></td>
+            <td>${eventLocation}</td>
+            <td>${eventDate}</td>
+            <td>${eventPrice}</td>
             <td><span class="status-badge status-pending">PENDING</span></td>
             <td><div class="action-buttons">
                 <button class="btn-approve" onclick="approveRegistration('${reg.registrationId}')"><i class="fas fa-check"></i> Approve</button>
@@ -526,7 +528,6 @@ function showPendingRegistrations() {
 // ALL REGISTRATIONS
 // ================================================================
 function showAllRegistrations() {
-    allRegistrations = JSON.parse(localStorage.getItem('allRegistrations')) || [];
     const tbody = document.getElementById('allTableBody');
     tbody.innerHTML = '';
 
@@ -539,8 +540,7 @@ function showAllRegistrations() {
     // Sort newest first
     const sorted = [...allRegistrations].reverse();
     sorted.forEach(reg=>{
-        const event = eventsData.find(e=>e.id===reg.eventId);
-        if(!event) return;
+        const event = eventsData.find(e=>String(e.id)===String(reg.eventId));
         let statusClass='status-pending', statusText='PENDING';
         if(reg.status==='approved'){ statusClass='status-approved'; statusText='APPROVED'; }
         else if(reg.status==='rejected'){ statusClass='status-rejected'; statusText='REJECTED'; }
@@ -549,10 +549,10 @@ function showAllRegistrations() {
         const row=document.createElement('tr');
         row.innerHTML=`
             <td><div class="user-info"><div class="user-name">${reg.userName||'Unknown'}</div><div class="user-email">${reg.userEmail||'No email'}</div></div></td>
-            <td><strong>${event.title}</strong></td>
-            <td>${event.location}</td>
-            <td>${event.date}</td>
-            <td>${event.price===0?'<span style="color:var(--approved);font-weight:700;">FREE</span>':'<strong>$'+event.price+'</strong>'}</td>
+            <td><strong>${event?event.title:(reg.eventTitle||'Event #'+reg.eventId)}</strong></td>
+            <td>${event?event.location:'—'}</td>
+            <td>${event?event.date:'—'}</td>
+            <td>${event?(event.price===0?'<span style="color:var(--approved);font-weight:700;">FREE</span>':'<strong>$'+event.price+'</strong>'):'—'}</td>
             <td><span class="status-badge ${statusClass}">${statusText}</span></td>
             <td>${reg.registrationDate||'—'}</td>`;
         tbody.appendChild(row);
@@ -563,7 +563,6 @@ function showAllRegistrations() {
 // EVENTS MANAGEMENT
 // ================================================================
 function showEventsManagement() {
-    allRegistrations = JSON.parse(localStorage.getItem('allRegistrations')) || [];
     const container = document.getElementById('eventsList');
     container.innerHTML = '';
 
@@ -707,9 +706,6 @@ function notifyUser(userId, eventId, status) {
 // VIEW DETAILS MODAL
 // ================================================================
 function viewRegistrationDetails(registrationId) {
-    pendingRegistrations = JSON.parse(localStorage.getItem('pendingRegistrations')) || [];
-    allRegistrations     = JSON.parse(localStorage.getItem('allRegistrations'))     || [];
-
     const reg = [...pendingRegistrations,...allRegistrations].find(r=>r.registrationId===registrationId);
     if(!reg) return;
 
